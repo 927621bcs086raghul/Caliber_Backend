@@ -5,7 +5,8 @@ const Video = require('../models/video');
 const User = require('../models/user');
 const { protect } = require('../middleware/authMiddleware');
 
-const router = express.Router();
+const createVideoRouter = (io) => {
+  const router = express.Router();
 
 // Multer storage config
 const storage = multer.diskStorage({
@@ -18,32 +19,44 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage });
+  const upload = multer({ storage });
 
-// Upload video
-router.post('/', protect, upload.single('video'), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ message: 'No file uploaded' });
+  // Upload video
+  router.post('/', protect, upload.single('video'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded' });
+      }
+
+      const { originalname, filename, size } = req.file;
+
+      const video = await Video.create({
+        filename: originalname,
+        filepath: `/uploads/${filename}`,
+        filesize: size,
+        user_id: req.user.id,
+      });
+
+      // Emit real-time event to a room (e.g., 'dashboard')
+      if (io) {
+        io.to('dashboard').emit('videoUploaded', {
+          id: video.id,
+          filename: video.filename,
+          filepath: video.filepath,
+          filesize: video.filesize,
+          user_id: video.user_id,
+          createdAt: video.createdAt,
+        });
+      }
+
+      res.status(201).json(video);
+    } catch (err) {
+      res.status(500).json({ message: 'Server error', error: err.message });
     }
-
-    const { originalname, filename, size } = req.file;
-
-    const video = await Video.create({
-      filename: originalname,
-      filepath: `/uploads/${filename}`,
-      filesize: size,
-      user_id: req.user.id,
-    });
-
-    res.status(201).json(video);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
+  });
 
 // Get all videos
-router.get('/', async (req, res) => {
+  router.get('/', async (req, res) => {
   try {
     const videos = await Video.findAll({
       include: [
@@ -57,6 +70,9 @@ router.get('/', async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
-});
+  });
 
-module.exports = router;
+  return router;
+};
+
+module.exports = createVideoRouter;
