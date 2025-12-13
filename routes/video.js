@@ -204,26 +204,26 @@ const createVideoRouter = (io) => {
    *           type: integer
    *         description: ID of the user
    *     responses:
-    *       200:
-    *         description: List of videos created by the user
-    *         content:
-    *           application/json:
-    *             example:
-    *               - id: 1
-    *                 filename: "video.mp4"
-    *                 filepath: "/uploads/1734080000000-video.mp4"
-    *                 filesize: 1234567
-    *                 title: "User Video"
-    *                 description: "Uploaded by this user"
-    *                 thumbnailPath: "/uploads/1734080000001-thumb.jpg"
-    *                 user_id: 5
-    *       500:
-    *         description: Server error
-    *         content:
-    *           application/json:
-    *             example:
-    *               message: "Server error"
-    *               error: "Error details"
+   *       200:
+   *         description: List of videos created by the user
+   *         content:
+   *           application/json:
+   *             example:
+   *               - id: 1
+   *                 filename: "video.mp4"
+   *                 filepath: "/uploads/1734080000000-video.mp4"
+   *                 filesize: 1234567
+   *                 title: "User Video"
+   *                 description: "Uploaded by this user"
+   *                 thumbnailPath: "/uploads/1734080000001-thumb.jpg"
+   *                 user_id: 5
+   *       500:
+   *         description: Server error
+   *         content:
+   *           application/json:
+   *             example:
+   *               message: "Server error"
+   *               error: "Error details"
    */
   router.get('/user/:userId', async (req, res) => {
     try {
@@ -248,38 +248,44 @@ const createVideoRouter = (io) => {
 
   /**
    * @swagger
-   * /api/videos/:videoId:
+   * /api/videos/{videoId}:
    *   get:
-   *     summary: Get videos created by a specific user
+   *     summary: Get a single video by ID
    *     tags: [Videos]
    *     parameters:
    *       - in: path
-   *         name: userId
+   *         name: videoId
    *         required: true
    *         schema:
    *           type: integer
-   *         description: ID of the user
+   *         description: ID of the video
    *     responses:
-    *       200:
-    *         description: List of videos created by the user
-    *         content:
-    *           application/json:
-    *             example:
-    *               - id: 1
-    *                 filename: "video.mp4"
-    *                 filepath: "/uploads/1734080000000-video.mp4"
-    *                 filesize: 1234567
-    *                 title: "User Video"
-    *                 description: "Uploaded by this user"
-    *                 thumbnailPath: "/uploads/1734080000001-thumb.jpg"
-    *                 user_id: 5
-    *       500:
-    *         description: Server error
-    *         content:
-    *           application/json:
-    *             example:
-    *               message: "Server error"
-    *               error: "Error details"
+   *       200:
+   *         description: Video details
+   *         content:
+   *           application/json:
+   *             example:
+   *               id: 1
+   *               filename: "video.mp4"
+   *               filepath: "/uploads/1734080000000-video.mp4"
+   *               filesize: 1234567
+   *               title: "Demo Video"
+   *               description: "Sample description"
+   *               thumbnailPath: "/uploads/1734080000001-thumb.jpg"
+   *               user_id: 1
+   *       404:
+   *         description: Video not found
+   *         content:
+   *           application/json:
+   *             example:
+   *               message: "Video not found"
+   *       500:
+   *         description: Server error
+   *         content:
+   *           application/json:
+   *             example:
+   *               message: "Server error"
+   *               error: "Error details"
    */
 
   router.get('/:videoId', async (req, res) => {
@@ -305,6 +311,40 @@ const createVideoRouter = (io) => {
   
 
 
+  /**
+   * @swagger
+   * /api/videos/stream/{videoId}:
+   *   get:
+   *     summary: Stream a video by ID
+   *     tags: [Videos]
+   *     parameters:
+   *       - in: path
+   *         name: videoId
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: ID of the video to stream
+   *     responses:
+   *       206:
+   *         description: Partial video content
+   *       404:
+   *         description: Video not found
+   *         content:
+   *           application/json:
+   *             example:
+   *               error: "Video not found"
+   *       416:
+   *         description: Range header required
+   *         content:
+   *           text/plain:
+   *             example: "Range header required"
+   *       500:
+   *         description: Server error
+   *         content:
+   *           application/json:
+   *             example:
+   *               error: "Error details"
+   */
   router.get('/stream/:videoId', async (req, res) => {
     try {
       const { videoId } = req.params;
