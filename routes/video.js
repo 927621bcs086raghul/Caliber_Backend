@@ -54,14 +54,38 @@ const createVideoRouter = (io) => {
   *                 type: string
   *                 format: binary
    *     responses:
-   *       201:
-   *         description: Video uploaded successfully
-   *       400:
-   *         description: No file uploaded
-   *       401:
-   *         description: Unauthorized
-   *       500:
-   *         description: Server error
+    *       201:
+    *         description: Video uploaded successfully
+    *         content:
+    *           application/json:
+    *             example:
+    *               id: 1
+    *               filename: "video.mp4"
+    *               filepath: "/uploads/1734080000000-video.mp4"
+    *               filesize: 1234567
+    *               title: "Demo Video"
+    *               description: "Sample description"
+    *               thumbnailPath: "/uploads/1734080000001-thumb.jpg"
+    *               user_id: 1
+    *       400:
+    *         description: No file uploaded
+    *         content:
+    *           application/json:
+    *             example:
+    *               message: "No video file uploaded"
+    *       401:
+    *         description: Unauthorized
+    *         content:
+    *           application/json:
+    *             example:
+    *               message: "Not authorized, no token"
+    *       500:
+    *         description: Server error
+    *         content:
+    *           application/json:
+    *             example:
+    *               message: "Server error"
+    *               error: "Error details"
    */
   // Upload video with thumbnail
   router.post(
@@ -127,10 +151,26 @@ const createVideoRouter = (io) => {
    *     summary: Get all videos
    *     tags: [Videos]
    *     responses:
-   *       200:
-   *         description: List of videos
-   *       500:
-   *         description: Server error
+    *       200:
+    *         description: List of videos
+    *         content:
+    *           application/json:
+    *             example:
+    *               - id: 1
+    *                 filename: "video.mp4"
+    *                 filepath: "/uploads/1734080000000-video.mp4"
+    *                 filesize: 1234567
+    *                 title: "Demo Video"
+    *                 description: "Sample description"
+    *                 thumbnailPath: "/uploads/1734080000001-thumb.jpg"
+    *                 user_id: 1
+    *       500:
+    *         description: Server error
+    *         content:
+    *           application/json:
+    *             example:
+    *               message: "Server error"
+    *               error: "Error details"
    */
   // Get all videos
   router.get('/', async (req, res) => {
@@ -147,6 +187,61 @@ const createVideoRouter = (io) => {
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
+  });
+
+  /**
+   * @swagger
+   * /api/videos/user/{userId}:
+   *   get:
+   *     summary: Get videos created by a specific user
+   *     tags: [Videos]
+   *     parameters:
+   *       - in: path
+   *         name: userId
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: ID of the user
+   *     responses:
+    *       200:
+    *         description: List of videos created by the user
+    *         content:
+    *           application/json:
+    *             example:
+    *               - id: 1
+    *                 filename: "video.mp4"
+    *                 filepath: "/uploads/1734080000000-video.mp4"
+    *                 filesize: 1234567
+    *                 title: "User Video"
+    *                 description: "Uploaded by this user"
+    *                 thumbnailPath: "/uploads/1734080000001-thumb.jpg"
+    *                 user_id: 5
+    *       500:
+    *         description: Server error
+    *         content:
+    *           application/json:
+    *             example:
+    *               message: "Server error"
+    *               error: "Error details"
+   */
+  router.get('/user/:userId', async (req, res) => {
+    try {
+      const { userId } = req.params;
+
+      const videos = await Video.findAll({
+        where: { user_id: userId },
+        include: [
+          {
+            model: User,
+            attributes: ['id', 'name', 'email'],
+          },
+        ],
+      });
+
+      res.json(videos);
+    } catch (err) {
+      res.status(500).json({ message: 'Server error', error: err.message });
+    }
   });
 
   return router;

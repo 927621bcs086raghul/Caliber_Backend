@@ -68,9 +68,9 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Connect Database
 connectDB();
 
-// Sync models with DB (dev-friendly)
+// Sync models with DB (dev-friendly). alter:true updates existing tables.
 sequelize
-  .sync()
+  .sync({ alter: true })
   .then(() => console.log('Database synced'))
   .catch((err) => console.error('Sync error:', err));
 
