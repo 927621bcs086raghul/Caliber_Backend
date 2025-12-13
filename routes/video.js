@@ -3,6 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const Video = require('../models/video');
 const User = require('../models/user');
+const fs = require('fs');
 const { protect } = require('../middleware/authMiddleware');
 
 const createVideoRouter = (io) => {
@@ -227,6 +228,7 @@ const createVideoRouter = (io) => {
   router.get('/user/:userId', async (req, res) => {
     try {
       const { userId } = req.params;
+      console.log(req);
 
       const videos = await Video.findAll({
         where: { user_id: userId },
@@ -243,6 +245,102 @@ const createVideoRouter = (io) => {
       res.status(500).json({ message: 'Server error', error: err.message });
     }
   });
+
+  /**
+   * @swagger
+   * /api/videos/:videoId:
+   *   get:
+   *     summary: Get videos created by a specific user
+   *     tags: [Videos]
+   *     parameters:
+   *       - in: path
+   *         name: userId
+   *         required: true
+   *         schema:
+   *           type: integer
+   *         description: ID of the user
+   *     responses:
+    *       200:
+    *         description: List of videos created by the user
+    *         content:
+    *           application/json:
+    *             example:
+    *               - id: 1
+    *                 filename: "video.mp4"
+    *                 filepath: "/uploads/1734080000000-video.mp4"
+    *                 filesize: 1234567
+    *                 title: "User Video"
+    *                 description: "Uploaded by this user"
+    *                 thumbnailPath: "/uploads/1734080000001-thumb.jpg"
+    *                 user_id: 5
+    *       500:
+    *         description: Server error
+    *         content:
+    *           application/json:
+    *             example:
+    *               message: "Server error"
+    *               error: "Error details"
+   */
+
+  router.get('/:videoId', async (req, res) => {
+    try {
+      const { videoId } = req.params;
+  
+      const video = await Video.findByPk(videoId, {
+        include: {
+          model: User,
+          attributes: ['id', 'name', 'email'],
+        },
+      });
+  
+      if (!video) {
+        return res.status(404).json({ message: 'Video not found' });
+      }
+  
+      res.json(video);
+    } catch (err) {
+      res.status(500).json({ message: 'Server error', error: err.message });
+    }
+  });
+  
+
+
+  router.get('/stream/:videoId', async (req, res) => {
+    try {
+      const { videoId } = req.params;
+  
+      const video = await Video.findByPk(videoId);
+      if (!video) return res.status(404).send('Video not found');
+  
+      const videoPath = path.join(__dirname, '..', video.filepath);
+      const stat = fs.statSync(videoPath);
+      const fileSize = stat.size;
+  
+      const range = req.headers.range;
+      if (!range) {
+        return res.status(416).send('Range header required');
+      }
+  
+      const CHUNK_SIZE = 10 ** 6; // 1MB
+      const start = Number(range.replace(/\D/g, ''));
+      const end = Math.min(start + CHUNK_SIZE, fileSize - 1);
+  
+      const contentLength = end - start + 1;
+  
+      res.writeHead(206, {
+        'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+        'Accept-Ranges': 'bytes',
+        'Content-Length': contentLength,
+        'Content-Type': 'video/mp4',
+      });
+  
+      const stream = fs.createReadStream(videoPath, { start, end });
+      stream.pipe(res);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+  
 
   return router;
 };
