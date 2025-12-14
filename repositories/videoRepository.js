@@ -17,6 +17,27 @@ class VideoRepository {
    */
   async findAll() {
     return await Video.findAll({
+      where: {
+      draft: false,   // ✅ published videos
+    },
+      include: [
+        {
+          model: User,
+          attributes: ['id', 'name', 'email'],
+        },
+      ],
+    });
+  }
+
+    /**
+   * Find all videos with user information
+   * @returns {Promise<Array<Video>>}
+   */
+  async findUnPublishedVideo() {
+    return await Video.findAll({
+      where: {
+      draft: true,   // ✅ published videos
+    },
       include: [
         {
           model: User,

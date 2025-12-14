@@ -14,7 +14,8 @@ class VideoService {
    * @throws {Error} If video file is missing or validation fails
    */
   async uploadVideo(videoData) {
-    const { files, title, description, userId } = videoData;
+  
+    const { files, title, description, isDraft ,userId } = videoData;
 
     const videoFile = files && files.video ? files.video[0] : null;
     if (!videoFile) {
@@ -39,6 +40,7 @@ class VideoService {
       description,
       thumbnailPath: thumbnailFile ? `/uploads/${thumbnailFile.filename}` : null,
       user_id: userId,
+      draft:isDraft
     });
 
     return video;

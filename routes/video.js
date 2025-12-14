@@ -52,6 +52,9 @@ const createVideoRouter = (io) => {
    *               thumbnail:
    *                 type: string
    *                 format: binary
+   *               Draft:
+   *                 type: string
+   * 
    *     responses:
    *       201:
    *         description: Video uploaded successfully
