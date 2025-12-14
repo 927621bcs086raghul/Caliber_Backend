@@ -37,10 +37,10 @@ const createVideoRouter = (io) => {
    *       - bearerAuth: []
    *     requestBody:
    *       required: true
-   *       content:
-   *         multipart/form-data:
-   *           schema:
-   *             type: object
+  *       content:
+  *         multipart/form-data:
+  *           schema:
+  *             type: object
   *             properties:
   *               title:
   *                 type: string
@@ -51,32 +51,32 @@ const createVideoRouter = (io) => {
   *                 items:
   *                   type: string
   *                 description: Array of category names to associate with the video, e.g. ["Education", "React", "Programming"]
-   *               video:
-   *                 type: string
-   *                 format: binary
-   *               thumbnail:
-   *                 type: string
-   *                 format: binary
-   *               Draft:
-   *                 type: string
-   * 
+  *               video:
+  *                 type: string
+  *                 format: binary
+  *               thumbnail:
+  *                 type: string
+  *                 format: binary
+  *               draft:
+  *                 type: boolean
+  *                 description: Whether the video is a draft (default false)
    *     responses:
    *       201:
    *         description: Video uploaded successfully
    *         content:
    *           application/json:
-   *             example:
-   *               id: 1
-   *               filename: "video.mp4"
-   *               filepath: "/uploads/1734080000000-video.mp4"
-   *               filesize: 1234567
-   *               title: "Demo Video"
-   *               description: "Sample description"
+  *             example:
+  *               id: 1
+  *               filename: "video.mp4"
+  *               filepath: "/uploads/1734080000000-video.mp4"
+  *               filesize: 1234567
+  *               title: "Demo Video"
+  *               description: "Sample description"
   *               categories:
   *                 - React
   *                 - Games
-   *               thumbnailPath: "/uploads/1734080000001-thumb.jpg"
-   *               user_id: 1
+  *               thumbnailPath: "/uploads/1734080000001-thumb.jpg"
+  *               user_id: 1
    *       400:
    *         description: No file uploaded
    *         content:
@@ -144,14 +144,17 @@ const createVideoRouter = (io) => {
    *         content:
    *           application/json:
    *             example:
-   *               - id: 1
-   *                 filename: "video.mp4"
-   *                 filepath: "/uploads/1734080000000-video.mp4"
-   *                 filesize: 1234567
-   *                 title: "Demo Video"
-   *                 description: "Sample description"
-   *                 thumbnailPath: "/uploads/1734080000001-thumb.jpg"
-   *                 user_id: 1
+  *               - id: 1
+  *                 filename: "video.mp4"
+  *                 filepath: "/uploads/1734080000000-video.mp4"
+  *                 filesize: 1234567
+  *                 title: "Demo Video"
+  *                 description: "Sample description"
+  *                 categories:
+  *                   - React
+  *                   - Games
+  *                 thumbnailPath: "/uploads/1734080000001-thumb.jpg"
+  *                 user_id: 1
    *       500:
    *         description: Server error
    *         content:
@@ -181,14 +184,17 @@ const createVideoRouter = (io) => {
    *         content:
    *           application/json:
    *             example:
-   *               - id: 1
-   *                 filename: "video.mp4"
-   *                 filepath: "/uploads/1734080000000-video.mp4"
-   *                 filesize: 1234567
-   *                 title: "User Video"
-   *                 description: "Uploaded by this user"
-   *                 thumbnailPath: "/uploads/1734080000001-thumb.jpg"
-   *                 user_id: 5
+  *               - id: 1
+  *                 filename: "video.mp4"
+  *                 filepath: "/uploads/1734080000000-video.mp4"
+  *                 filesize: 1234567
+  *                 title: "User Video"
+  *                 description: "Uploaded by this user"
+  *                 categories:
+  *                   - React
+  *                   - Games
+  *                 thumbnailPath: "/uploads/1734080000001-thumb.jpg"
+  *                 user_id: 5
    *       500:
    *         description: Server error
    *         content:
