@@ -30,6 +30,10 @@ const Video = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: true,
     },
+    categories: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+    },
     thumbnailPath: {
       type: DataTypes.STRING,
       allowNull: true,

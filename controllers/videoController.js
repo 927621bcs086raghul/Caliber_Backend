@@ -8,7 +8,7 @@ class VideoController {
    */
   async uploadVideo(req, res, io) {
     try {
-      const { title, description,isDraft } = req.body;
+      const { title, description,isDraft, categories } = req.body;
 
       const video = await videoService.uploadVideo({
         files: req.files,
@@ -16,6 +16,7 @@ class VideoController {
         description,
         isDraft,
         userId: req.user.id,
+        categories,
       });
 
       if (io) {
@@ -26,6 +27,7 @@ class VideoController {
           filesize: video.filesize,
           title: video.title,
           description: video.description,
+          categories: video.categories || (Array.isArray(categories) ? categories : []),
           thumbnailPath: video.thumbnailPath,
           user_id: video.user_id,
           createdAt: video.createdAt,
@@ -60,6 +62,23 @@ class VideoController {
   }
 
   /**
+   * Get all distinct video categories
+   * @route GET /api/videos/categories
+   */
+  async getCategories(req, res) {
+    try {
+      const categories = await videoService.getAllCategories();
+      res.json(categories);
+    } catch (error) {
+      const statusCode = error.statusCode || 500;
+      res.status(statusCode).json({
+        message: error.message || 'Server error',
+        ...(process.env.NODE_ENV === 'development' && { error: error.stack }),
+      });
+    }
+  }
+
+  /**
    * Get videos by user ID
    * @route GET /api/videos/user/:userId
    */
@@ -88,7 +107,7 @@ class VideoController {
       res.json(video);
     } catch (error) {
       const statusCode = error.statusCode || 500;
-      res.status(statusCode).json({ 
+      res.status(statusCode).json({
         message: error.message || 'Server error',
         ...(process.env.NODE_ENV === 'development' && { error: error.stack })
       });
