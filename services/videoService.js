@@ -1,4 +1,5 @@
 const videoRepository = require('../repositories/videoRepository');
+const VideoCategory = require('../models/videoCategory');
 const path = require('path');
 const fs = require('fs');
 
@@ -14,7 +15,32 @@ class VideoService {
    * @throws {Error} If video file is missing or validation fails
    */
   async uploadVideo(videoData) {
-    const { files, title, description, userId } = videoData;
+    const { files, title, description, userId, categories } = videoData;
+
+    // Normalize categories: accept array, JSON string, or single comma-separated string
+    console.log('Categories input:', categories);
+    let categoryList = [];
+    if (Array.isArray(categories)) {
+      categoryList = categories;
+    } else if (typeof categories === 'string') {
+      const trimmed = categories.trim();
+      if (trimmed) {
+        // Try JSON array first (e.g. "[\"React\",\"Games\"]"), then fall back to comma-separated
+        try {
+          const parsed = JSON.parse(trimmed);
+          if (Array.isArray(parsed)) {
+            categoryList = parsed;
+          } else {
+            categoryList = [trimmed];
+          }
+        } catch {
+          categoryList = trimmed
+            .split(',')
+            .map((c) => c.trim())
+            .filter(Boolean);
+        }
+      }
+    }
 
     const videoFile = files && files.video ? files.video[0] : null;
     if (!videoFile) {
@@ -37,9 +63,19 @@ class VideoService {
       filesize: videoFile.size,
       title,
       description,
+      categories: categoryList.length > 0 ? categoryList : null,
       thumbnailPath: thumbnailFile ? `/uploads/${thumbnailFile.filename}` : null,
       user_id: userId,
     });
+
+    if (categoryList.length > 0) {
+      const rows = categoryList.map((catName) => ({
+        video_id: video.id,
+        category_name: catName,
+      }));
+
+      await VideoCategory.bulkCreate(rows);
+    }
 
     return video;
   }
@@ -50,6 +86,20 @@ class VideoService {
    */
   async getAllVideos() {
     return await videoRepository.findAll();
+  }
+
+  /**
+   * Get all distinct category names used in videos
+   * @returns {Promise<Array<string>>} List of category names
+   */
+  async getAllCategories() {
+    const rows = await VideoCategory.findAll({
+      attributes: ['category_name'],
+      group: ['category_name'],
+      order: [['category_name', 'ASC']],
+    });
+
+    return rows.map((row) => row.category_name);
   }
 
   /**
@@ -76,7 +126,13 @@ class VideoService {
       throw error;
     }
 
-    return video;
+    const plain = video.toJSON();
+    plain.categories = (video.VideoCategories || []).map(
+      (vc) => vc.category_name
+    );
+    delete plain.VideoCategories;
+
+    return plain;
   }
 
   /**

@@ -1,5 +1,6 @@
 const Video = require('../models/video');
 const User = require('../models/user');
+const VideoCategory = require('../models/videoCategory');
 
 class VideoRepository {
   /**
@@ -50,10 +51,16 @@ class VideoRepository {
    */
   async findById(id) {
     return await Video.findByPk(id, {
-      include: {
-        model: User,
-        attributes: ['id', 'name', 'email'],
-      },
+      include: [
+        {
+          model: User,
+          attributes: ['id', 'name', 'email'],
+        },
+        {
+          model: VideoCategory,
+          attributes: ['category_name'],
+        },
+      ],
     });
   }
 

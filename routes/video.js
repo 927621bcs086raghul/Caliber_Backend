@@ -41,11 +41,16 @@ const createVideoRouter = (io) => {
    *         multipart/form-data:
    *           schema:
    *             type: object
-   *             properties:
-   *               title:
-   *                 type: string
-   *               description:
-   *                 type: string
+  *             properties:
+  *               title:
+  *                 type: string
+  *               description:
+  *                 type: string
+  *               categories:
+  *                 type: array
+  *                 items:
+  *                   type: string
+  *                 description: Array of category names to associate with the video, e.g. ["Education", "React", "Programming"]
    *               video:
    *                 type: string
    *                 format: binary
@@ -64,6 +69,9 @@ const createVideoRouter = (io) => {
    *               filesize: 1234567
    *               title: "Demo Video"
    *               description: "Sample description"
+  *               categories:
+  *                 - React
+  *                 - Games
    *               thumbnailPath: "/uploads/1734080000001-thumb.jpg"
    *               user_id: 1
    *       400:
@@ -95,6 +103,31 @@ const createVideoRouter = (io) => {
     ]),
     (req, res) => videoController.uploadVideo(req, res, io)
   );
+
+  /**
+   * @swagger
+   * /api/videos/categories:
+   *   get:
+   *     summary: Get all distinct video categories
+   *     tags: [Videos]
+   *     responses:
+   *       200:
+   *         description: List of category names
+   *         content:
+   *           application/json:
+   *             example:
+   *               - Education
+   *               - React
+   *               - Programming
+   *       500:
+   *         description: Server error
+   *         content:
+   *           application/json:
+   *             example:
+   *               message: "Server error"
+   *               error: "Error details"
+   */
+  router.get('/categories', (req, res) => videoController.getCategories(req, res));
 
   /**
    * @swagger
@@ -224,6 +257,9 @@ const createVideoRouter = (io) => {
    *               filesize: 1234567
    *               title: "Demo Video"
    *               description: "Sample description"
+  *               categories:
+  *                 - React
+  *                 - Games
    *               thumbnailPath: "/uploads/1734080000001-thumb.jpg"
    *               user_id: 1
    *       404:
