@@ -1,10 +1,8 @@
 const express = require('express');
-const jwt = require('jsonwebtoken');
-const User = require('../models/user');
+const authController = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'changeme-secret-key';
 
 /**
  * @swagger
@@ -61,26 +59,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'changeme-secret-key';
  *               message: "Server error"
  *               error: "Error details"
  */
-router.post('/register', async (req, res) => {
-  try {
-    const { name, email, password } = req.body;
-
-    const existing = await User.findOne({ where: { email } });
-    if (existing) {
-      return res.status(400).json({ message: 'User already exists' });
-    }
-
-    const user = await User.create({ name, email, password });
-
-    res.status(201).json({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-    });
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
+router.post('/register', (req, res) => authController.register(req, res));
 
 /**
  * @swagger
@@ -129,49 +108,7 @@ router.post('/register', async (req, res) => {
  *               message: "Server error"
  *               error: "Error details"
  */
-router.post('/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    const user = await User.findOne({ where: { email } });
-    if (!user) {
-      return res.status(400).json({ message: 'Invalid credentials' });
-    }
-
-    const isMatch = await user.matchPassword(password);
-    if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials' });
-    }
-
-    const token = jwt.sign({ id: user.id }, JWT_SECRET, {
-      expiresIn: '7d',
-    });
-
-    const cookieOptions = {
-      httpOnly: true,
-      sameSite: 'lax',
-    };
-
-    if (process.env.NODE_ENV === 'production') {
-      cookieOptions.secure = true;
-      cookieOptions.sameSite = 'strict';
-    }
-
-    res
-      .cookie('token', token, cookieOptions)
-      .json({
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          phone: user.phone,
-          location: user.location,
-        },
-      });
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
+router.post('/login', (req, res) => authController.login(req, res));
 
 /**
  * @swagger
@@ -187,10 +124,7 @@ router.post('/login', async (req, res) => {
  *             example:
  *               message: "Logged out successfully"
  */
-router.post('/logout', (req, res) => {
-  res.clearCookie('token');
-  res.json({ message: 'Logged out successfully' });
-});
+router.post('/logout', (req, res) => authController.logout(req, res));
 
 /**
  * @swagger
@@ -207,10 +141,7 @@ router.post('/logout', (req, res) => {
  *               authenticated: true
  *               userId: 1
  */
-router.get('/check', protect, (req, res) => {
-  // If protect passed, token is valid and req.user is set
-  res.json({ authenticated: true, userId: req.user.id });
-});
+router.get('/check', protect, (req, res) => authController.checkAuth(req, res));
 
 /**
  * @swagger
@@ -238,21 +169,7 @@ router.get('/check', protect, (req, res) => {
  *             example:
  *               message: "Not authorized, no token"
  */
-router.get('/me', protect, async (req, res) => {
-  try {
-    const user = await User.findByPk(req.user.id, {
-      attributes: ['id', 'name', 'email', 'phone', 'location', 'createdAt', 'updatedAt'],
-    });
-
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    res.json(user);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
+router.get('/me', protect, (req, res) => authController.getCurrentUser(req, res));
 
 /**
  * @swagger
@@ -294,23 +211,7 @@ router.get('/me', protect, async (req, res) => {
  *               message: "Server error"
  *               error: "Error details"
  */
-router.get('/me/:id', protect, async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const user = await User.findByPk(id, {
-      attributes: ['id', 'name', 'email', 'phone', 'location', 'createdAt', 'updatedAt'],
-    });
-
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    res.json(user);
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
+router.get('/me/:id', protect, (req, res) => authController.getUserById(req, res));
 
 /**
  * @swagger
@@ -359,32 +260,6 @@ router.get('/me/:id', protect, async (req, res) => {
  *               message: "Server error"
  *               error: "Error details"
  */
-router.patch('/profile', protect, async (req, res) => {
-  try {
-    const { name, email, phone, location } = req.body;
-
-    const user = await User.findByPk(req.user.id);
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    if (name !== undefined) user.name = name;
-    if (email !== undefined) user.email = email;
-    if (phone !== undefined) user.phone = phone;
-    if (location !== undefined) user.location = location;
-
-    await user.save();
-
-    res.json({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      location: user.location,
-    });
-  } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
-  }
-});
+router.patch('/profile', protect, (req, res) => authController.updateProfile(req, res));
 
 module.exports = router;

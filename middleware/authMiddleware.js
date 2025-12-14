@@ -1,11 +1,9 @@
 const jwt = require('jsonwebtoken');
-
-const JWT_SECRET = process.env.JWT_SECRET || 'changeme-secret-key';
+const config = require('../config/env');
 
 const protect = (req, res, next) => {
   let token = null;
 
-  // Prefer HttpOnly cookie
   if (req.cookies && req.cookies.token) {
     token = req.cookies.token;
   } else {
@@ -20,7 +18,7 @@ const protect = (req, res, next) => {
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, config.jwt.secret);
     req.user = decoded;
     next();
   } catch (err) {

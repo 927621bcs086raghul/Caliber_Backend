@@ -1,4 +1,3 @@
-require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
@@ -7,6 +6,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const swaggerUi = require('swagger-ui-express');
 const swaggerJsdoc = require('swagger-jsdoc');
+const config = require('./config/env');
 const { sequelize, connectDB } = require('./config/db');
 
 const authRoutes = require('./routes/auth');
@@ -14,20 +14,10 @@ const createVideoRouter = require('./routes/video');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST'],
-  },
-});
-
-const PORT = process.env.PORT || 5000;
+const io = new Server(server, config.socketIO);
 
 // Middleware
-app.use(cors({
-  origin: true,
-  credentials: true,
-}));
+app.use(cors(config.cors));
 app.use(express.json());
 app.use(cookieParser());
 
@@ -42,7 +32,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: 'http://localhost:5000',
+        url: config.swagger.url,
       },
     ],
     components: {
@@ -60,10 +50,13 @@ const swaggerOptions = {
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+if (config.swagger.enabled) {
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  console.log(`📚 API Documentation: ${config.swagger.url}/api-docs`);
+}
 
 // Static folder for uploads
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, config.upload.uploadDir)));
 
 // Connect Database
 connectDB();
@@ -74,11 +67,9 @@ sequelize
   .then(() => console.log('Database synced'))
   .catch((err) => console.error('Sync error:', err));
 
-// Socket.IO events
 io.on('connection', (socket) => {
   console.log('Client connected', socket.id);
 
-  // Join a room (e.g., dashboard, specific user, etc.)
   socket.on('joinRoom', (room) => {
     socket.join(room);
   });
@@ -88,17 +79,21 @@ io.on('connection', (socket) => {
   });
 });
 
-// Attach io to app so routes can emit events
 app.set('io', io);
 
-// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/videos', createVideoRouter(io));
 
 app.get('/', (req, res) => {
-  res.json({ message: 'Caliber API is running' });
+  res.json({
+    message: 'Caliber API is running',
+    environment: config.server.nodeEnv,
+    version: '1.0.0'
+  });
 });
 
-server.listen(PORT, () => {
-  console.log(`Server started on port ${PORT}`);
+server.listen(config.server.port, () => {
+  console.log(`Server started on port ${config.server.port}`);
+  console.log(`Environment: ${config.server.nodeEnv}`);
+  console.log(`CORS Origin: ${config.cors.origin}`);
 });
