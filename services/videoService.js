@@ -264,6 +264,24 @@ class VideoService {
       },
     };
   }
+
+  /**
+   * Get videos by category name
+   * @param {string} categoryName - Category name to filter by
+   * @returns {Promise<Array<Object>>} List of videos with that category
+   */
+  async getVideosByCategory(categoryName) {
+    const videos = await videoRepository.findByCategoryName(categoryName);
+
+    return videos.map((video) => {
+      const plain = video.toJSON();
+      plain.categories = (video.VideoCategories || []).map(
+        (vc) => vc.category_name
+      );
+      delete plain.VideoCategories;
+      return plain;
+    });
+  }
 }
 
 module.exports = new VideoService();

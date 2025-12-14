@@ -79,6 +79,29 @@ class VideoController {
   }
 
   /**
+   * Get videos by category
+   * @route GET /api/videos/category
+   */
+  async getVideosByCategory(req, res) {
+    try {
+      const { category } = req.query;
+
+      if (!category) {
+        return res.status(400).json({ message: 'category query parameter is required' });
+      }
+
+      const videos = await videoService.getVideosByCategory(category);
+      res.json(videos);
+    } catch (error) {
+      const statusCode = error.statusCode || 500;
+      res.status(statusCode).json({
+        message: error.message || 'Server error',
+        ...(process.env.NODE_ENV === 'development' && { error: error.stack }),
+      });
+    }
+  }
+
+  /**
    * Get videos by user ID
    * @route GET /api/videos/user/:userId
    */

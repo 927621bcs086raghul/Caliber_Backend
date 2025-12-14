@@ -109,6 +109,52 @@ const createVideoRouter = (io) => {
 
   /**
    * @swagger
+   * /api/videos/category:
+   *   get:
+   *     summary: Get videos by category name
+   *     tags: [Videos]
+   *     parameters:
+   *       - in: query
+   *         name: category
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Category name to filter videos by (e.g. "Games")
+   *     responses:
+   *       200:
+   *         description: List of videos that include the given category
+   *         content:
+   *           application/json:
+   *             example:
+   *               - id: 1
+   *                 filename: "video.mp4"
+   *                 filepath: "/uploads/1734080000000-video.mp4"
+   *                 filesize: 1234567
+   *                 title: "Demo Video"
+   *                 description: "Sample description"
+   *                 categories:
+   *                   - Games
+   *                   - React
+   *                 thumbnailPath: "/uploads/1734080000001-thumb.jpg"
+   *                 user_id: 1
+   *       400:
+   *         description: Missing category query parameter
+   *         content:
+   *           application/json:
+   *             example:
+   *               message: "category query parameter is required"
+   *       500:
+   *         description: Server error
+   *         content:
+   *           application/json:
+   *             example:
+   *               message: "Server error"
+   *               error: "Error details"
+   */
+  router.get('/category', (req, res) => videoController.getVideosByCategory(req, res));
+
+  /**
+   * @swagger
    * /api/videos/categories:
    *   get:
    *     summary: Get all distinct video categories
