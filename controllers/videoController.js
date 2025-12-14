@@ -8,12 +8,13 @@ class VideoController {
    */
   async uploadVideo(req, res, io) {
     try {
-      const { title, description, categories } = req.body;
+      const { title, description,isDraft, categories } = req.body;
 
       const video = await videoService.uploadVideo({
         files: req.files,
         title,
         description,
+        isDraft,
         userId: req.user.id,
         categories,
       });

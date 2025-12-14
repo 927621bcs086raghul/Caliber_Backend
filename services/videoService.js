@@ -15,7 +15,7 @@ class VideoService {
    * @throws {Error} If video file is missing or validation fails
    */
   async uploadVideo(videoData) {
-    const { files, title, description, userId, categories } = videoData;
+    const { files, title, description, userId, isDraft, categories } = videoData;
 
     // Normalize categories: accept array, JSON string, or single comma-separated string
     console.log('Categories input:', categories);
@@ -41,6 +41,7 @@ class VideoService {
         }
       }
     }
+  
 
     const videoFile = files && files.video ? files.video[0] : null;
     if (!videoFile) {
@@ -66,6 +67,7 @@ class VideoService {
       categories: categoryList.length > 0 ? categoryList : null,
       thumbnailPath: thumbnailFile ? `/uploads/${thumbnailFile.filename}` : null,
       user_id: userId,
+      draft:isDraft
     });
 
     if (categoryList.length > 0) {

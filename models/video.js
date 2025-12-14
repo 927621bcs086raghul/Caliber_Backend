@@ -4,7 +4,7 @@ const User = require('./user');
 
 const Video = sequelize.define(
   'Video',
-  {
+  { 
     id: {
       type: DataTypes.INTEGER,
       autoIncrement: true,
@@ -38,6 +38,12 @@ const Video = sequelize.define(
       type: DataTypes.STRING,
       allowNull: true,
     },
+    draft: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false, // recommended
+    },
+
   },
   {
     tableName: 'videos',
