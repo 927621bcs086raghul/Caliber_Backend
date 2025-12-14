@@ -128,6 +128,7 @@ const createVideoRouter = (io) => {
    *               error: "Error details"
    */
   router.get('/', (req, res) => videoController.getAllVideos(req, res));
+  router.get('/draftfetch', (req, res) => videoController.getDraftVideos(req, res));
 
   /**
    * @swagger
@@ -279,7 +280,11 @@ const createVideoRouter = (io) => {
    *       404:
    *         description: Video not found
    */
-  router.patch('/:videoId', protect, (req, res) => videoController.updateVideo(req, res));
+    router.patch( '/:videoId',
+    protect,
+    upload.single('thumbnail'), // 🔥 REQUIRED HERE
+    videoController.updateVideo
+  );
 
   /**
    * @swagger

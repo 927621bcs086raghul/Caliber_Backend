@@ -53,6 +53,11 @@ class VideoService {
   async getAllVideos() {
     return await videoRepository.findAll();
   }
+   async getDraftVideos() {
+    return await videoRepository.findUnPublishedVideo();
+  }
+
+
 
   /**
    * Get videos by user ID
@@ -123,29 +128,44 @@ class VideoService {
    * @returns {Promise<Object>} Updated video data
    * @throws {Error} If video not found or user not authorized
    */
-  async updateVideo(videoId, updates, userId) {
-    const video = await videoRepository.findById(videoId);
-    
-    if (!video) {
-      const error = new Error('Video not found');
-      error.statusCode = 404;
-      throw error;
-    }
+async updateVideo(videoId, updates, userId) {
+  const video = await videoRepository.findById(videoId);
 
-    if (video.user_id !== userId) {
-      const error = new Error('Not authorized to update this video');
-      error.statusCode = 403;
-      throw error;
-    }
-
-    const allowedUpdates = {};
-    if (updates.title !== undefined) allowedUpdates.title = updates.title;
-    if (updates.description !== undefined) allowedUpdates.description = updates.description;
-
-    await videoRepository.update(video, allowedUpdates);
-
-    return video;
+  if (!video) {
+    const error = new Error('Video not found');
+    error.statusCode = 404;
+    throw error;
   }
+
+  if (video.user_id !== userId) {
+    const error = new Error('Not authorized to update this video');
+    error.statusCode = 403;
+    throw error;
+  }
+
+  // 🔑 Allow only specific fields to be updated
+  const allowedUpdates = {};
+
+  if (updates.title !== undefined) {
+    allowedUpdates.title = updates.title;
+  }
+
+  if (updates.description !== undefined) {
+    allowedUpdates.description = updates.description;
+  }
+
+  if (updates.thumbnailPath !== undefined) {
+    allowedUpdates.thumbnailPath = updates.thumbnailPath;
+  }
+
+  // ✅ FORCE publish (draft → false)
+  allowedUpdates.draft = false;
+
+  await videoRepository.update(video, allowedUpdates);
+
+  return video;
+}
+
 
   /**
    * Delete a video

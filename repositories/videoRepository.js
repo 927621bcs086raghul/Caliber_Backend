@@ -16,6 +16,7 @@ class VideoRepository {
    * @returns {Promise<Array<Video>>}
    */
   async findAll() {
+    console.log('hi')
     return await Video.findAll({
       where: {
       draft: false,   // ✅ published videos

@@ -59,6 +59,19 @@ class VideoController {
     }
   }
 
+   async getDraftVideos(req, res) {
+    try {
+      const videos = await videoService.getDraftVideos();
+      res.json(videos);
+    } catch (error) {
+      const statusCode = error.statusCode || 500;
+      res.status(statusCode).json({ 
+        message: error.message || 'Server error',
+        ...(process.env.NODE_ENV === 'development' && { error: error.stack })
+      });
+    }
+  }
+
   /**
    * Get videos by user ID
    * @route GET /api/videos/user/:userId
@@ -138,25 +151,38 @@ class VideoController {
    * @route PATCH /api/videos/:videoId
    */
   async updateVideo(req, res) {
-    try {
-      const { videoId } = req.params;
-      const { title, description } = req.body;
+  try {
 
-      const updatedVideo = await videoService.updateVideo(
-        parseInt(videoId),
-        { title, description },
-        req.user.id
-      );
+    const { videoId } = req.params;
+    const { title, description } = req.body;
 
-      res.json(updatedVideo);
-    } catch (error) {
-      const statusCode = error.statusCode || 500;
-      res.status(statusCode).json({ 
-        message: error.message || 'Server error',
-        ...(process.env.NODE_ENV === 'development' && { error: error.stack })
-      });
+    // 🔑 Build update object dynamically
+    const updateData = {
+      title,
+      description,
+    };
+
+    // 🔑 If image uploaded, update thumbnailPath
+    if (req.file) {
+      updateData.thumbnailPath = `/uploads/${req.file.filename}`;
     }
+
+    const updatedVideo = await videoService.updateVideo(
+      parseInt(videoId, 10),
+      updateData,
+      req.user.id
+    );
+
+    res.json(updatedVideo);
+  } catch (error) {
+    const statusCode = error.statusCode || 500;
+    res.status(statusCode).json({
+      message: error.message || 'Server error',
+      ...(process.env.NODE_ENV === 'development' && { error: error.stack }),
+    });
   }
+}
+
 
   /**
    * Delete a video
