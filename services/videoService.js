@@ -119,6 +119,25 @@ class VideoService {
   }
 
   /**
+   * Get videos filtered by category name
+   * @param {string} categoryName - Category to filter by
+   * @returns {Promise<Array<Object>>} List of videos
+   */
+  async getVideosByCategory(categoryName) {
+    const videos = await videoRepository.findByCategory(categoryName);
+
+    // Attach categories array from VideoCategories association
+    return videos.map((video) => {
+      const plain = video.toJSON();
+      plain.categories = (video.VideoCategories || []).map(
+        (vc) => vc.category_name
+      );
+      delete plain.VideoCategories;
+      return plain;
+    });
+  }
+
+  /**
    * Get a single video by ID
    * @param {number} videoId - Video ID
    * @returns {Promise<Object>} Video data

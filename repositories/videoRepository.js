@@ -133,6 +133,28 @@ class VideoRepository {
   async count() {
     return await Video.count();
   }
+
+  /**
+   * Find videos by category name
+   * @param {string} categoryName - Category name to filter by
+   * @returns {Promise<Array<Video>>}
+   */
+  async findByCategory(categoryName) {
+    return await Video.findAll({
+      where: { draft: false },
+      include: [
+        {
+          model: User,
+          attributes: ['id', 'name', 'email'],
+        },
+        {
+          model: VideoCategory,
+          attributes: ['category_name'],
+          where: { category_name: categoryName },
+        },
+      ],
+    });
+  }
 }
 
 module.exports = new VideoRepository();
